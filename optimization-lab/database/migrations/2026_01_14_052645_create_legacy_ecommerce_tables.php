@@ -11,24 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. 語言與國家配置
-        Schema::connection('middleware')->create('website_config', function ($table) {
+        // 1. Create the configuration table in the middleware database
+        Schema::connection('middleware')->create('website_config', function (Blueprint $table) {
             $table->id();
             $table->string('locale')->unique();
             $table->string('country_short');
+            $table->string('language_name');
             $table->timestamps();
         });
 
-        // 2. 商品零件
-        Schema::create('product_data', function ($table) {
+        // 2. Product Parts (Inventory data)
+        Schema::create('product_data', function (Blueprint $table) {
             $table->id();
             $table->string('part_no')->unique();
             $table->string('description');
             $table->timestamps();
         });
 
-        // 3. 訂單 (關聯 locale)
-        Schema::create('orders', function ($table) {
+        // 3. Orders (Associated with locale for regional tracking)
+        Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->string('order_number')->unique();
             $table->string('locale')->index(); 
@@ -36,8 +37,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 4. 訂單明細
-        Schema::create('order_lines', function ($table) {
+        // 4. Order Line Items
+        Schema::create('order_lines', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->constrained('product_data');
@@ -45,7 +46,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 5. 退貨表與明細 (合在一起寫方便示範)
+        // 5. Returns Table (Combined with details for demonstration purposes)
         Schema::create('returns', function ($table) {
             $table->id();
             $table->foreignId('order_id')->constrained();
@@ -53,6 +54,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // 6. Return Line Items
         Schema::create('return_lines', function ($table) {
             $table->id();
             $table->foreignId('return_id')->constrained()->onDelete('cascade');
@@ -67,6 +69,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('legacy_ecommerce_tables');
+        Schema::dropIfExists('return_lines');
+        Schema::dropIfExists('returns');
+        Schema::dropIfExists('order_lines');
+        Schema::dropIfExists('orders');
+        Schema::dropIfExists('product_data');
+        Schema::connection('middleware')->dropIfExists('website_config');
     }
 };
