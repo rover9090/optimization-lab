@@ -95,3 +95,38 @@ php artisan report:regional-sales ca
 # Optimized Report (Application-side Join)
 php artisan report:regional-sales ca --optimized
 ```
+---
+
+### 🧠 Engineering Q&A (Technical Deep Dive)
+
+This section documents the engineering considerations and trade-offs made during the development of this reporting system.
+
+#### **Q1: How do you handle failures during a large-scale data patching (e.g., 100k+ rows)?**
+
+**A:** I prioritize **Idempotency** and **Resumability**.
+
+* **Idempotency**: The patching scripts are designed to check if a record is already updated before performing a write operation. This prevents data corruption if the script needs to be restarted.
+* **Transactional Integrity**: Updates are wrapped in small database transactions. If a specific chunk fails, only that batch is rolled back, leaving the rest of the migrated data intact.
+* **Monitoring**: I implement logging for failed records, allowing for targeted re-runs instead of full-table rollbacks.
+
+#### **Q2: How do you prevent table locking and performance degradation in production?**
+
+**A:** I utilize **Low-Priority Batch Processing**.
+
+* **Chunking**: Instead of a single `UPDATE` statement that locks the entire table, I use Laravel’s `chunkById` to process 1,000 rows at a time.
+* **Throttle/Sleep**: In a live environment, I introduce short sleep intervals (e.g., 100ms) between batches to allow the DB engine to process concurrent user transactions (like new orders).
+* **Off-Peak Execution**: While the script is optimized for performance, I still schedule such migrations during off-peak hours to minimize the blast radius of any potential latency spikes.
+
+#### **Q3: Why not use a standard SQL Cross-Database Join?**
+
+**A:** To ensure **Architectural Decoupling** and **Scalability**.
+
+* Standard Joins require both databases to reside on the same physical instance. By implementing an **Application-side Join**, I allow the "Orders" and "Config" services to scale independently.
+* This approach is **Microservices-ready**, meaning the system can easily transition to a distributed cloud environment where databases are hosted on different clusters.
+
+#### **Q4: In a distributed setup, how do you ensure Unique IDs across different databases?**
+
+**A:** For distributed systems, I recommend the **Snowflake Algorithm** or **ULIDs**.
+
+* Traditional `AUTO_INCREMENT` leads to ID collisions when sharding data.
+* **Snowflake IDs** provide a 64-bit trend-increasing integer that includes a `Timestamp`, `Worker ID`, and `Sequence`. This guarantees uniqueness across nodes and maintains high indexing performance in MySQL's B+Tree structure.
