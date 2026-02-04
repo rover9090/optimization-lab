@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -19,6 +20,15 @@ return new class extends Migration
             $table->string('language_name');
             $table->timestamps();
         });
+
+        // Insert configuration data into middleware_db
+        $configs = [
+            ['locale' => 'ca-en', 'country_short' => 'ca', 'language_name' => 'English'],
+            ['locale' => 'ca-fr', 'country_short' => 'ca', 'language_name' => 'French'],
+            ['locale' => 'au-en', 'country_short' => 'au', 'language_name' => 'English'],
+        ];
+        // Note: Explicitly using the 'middleware' connection here
+        DB::connection('middleware')->table('website_config')->upsert($configs, ['locale']);
 
         // 2. Product Parts (Inventory data)
         Schema::create('product_data', function (Blueprint $table) {

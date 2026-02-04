@@ -14,17 +14,6 @@ class EcommerceSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Insert configuration data into middleware_db
-        $this->command->info('Initializing Middleware configurations...');
-        $configs = [
-            ['locale' => 'ca-en', 'country_short' => 'ca', 'language_name' => 'English'],
-            ['locale' => 'ca-fr', 'country_short' => 'ca', 'language_name' => 'French'],
-            ['locale' => 'au-en', 'country_short' => 'au', 'language_name' => 'English'],
-        ];
-        
-        // Note: Explicitly using the 'middleware' connection here
-        DB::connection('middleware')->table('website_config')->upsert($configs, ['locale']);
-
         // 2. Insert products into optimization_lab
         $this->command->info('Generating product data...');
         for ($i = 0; $i < 50; $i++) {
