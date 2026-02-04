@@ -68,7 +68,7 @@ return [
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => 'middleware_db', // 注意這裡名稱不同
+            'database' => env('MIDDLEWARE_DB_DATABASE', 'middleware_db'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
 			'unix_socket' => env('DB_SOCKET', ''),
