@@ -15,11 +15,11 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-/*
 return new class extends Migration
 {
     public function up(): void
     {
+        /*
         // 1. Add the redundant column for optimization (Denormalization)
         Schema::table('orders', function (Blueprint $table) {
             // We add 'country_code' to avoid cross-database joins
@@ -38,10 +38,12 @@ return new class extends Migration
                 ->where('locale', $locale)
                 ->update(['country_code' => $country]);
         }
+        */
     }
 
     public function down(): void
     {
+        /*
         Schema::table('orders', function (Blueprint $table) {
             // 1. Drop the index first (Good practice for some DB engines)
             $table->dropIndex(['country_code']);
@@ -49,6 +51,6 @@ return new class extends Migration
             // 2. Drop the redundant column
             $table->dropColumn('country_code');
         });
+        */
     }
 };
-*/
