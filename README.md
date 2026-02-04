@@ -86,8 +86,11 @@ For systems exceeding 10M+ rows, I have designed a **Data Patching Migration**. 
 ## 🏃 How to Run
 
 1. Ensure both database connections are configured in `.env`.
-2. Run migrations: `php artisan migrate`.
-3. Generate the report:
+2. Run migrations: 
+    `php artisan migrate:fresh --path=database/migrations/mysql --database=mysql`.
+    `php artisan migrate:fresh --path=database/migrations/middleware --database=middleware`.
+3. Run seeder: `php artisan db:seed --class=EcommerceSeeder`
+4. Generate the report:
 ```bash
 # Standard Report (Original Logic)
 php artisan report:regional-sales ca
