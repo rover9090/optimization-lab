@@ -16,10 +16,10 @@ use Illuminate\Support\Facades\Artisan;
 
 class ReportRegionalSalesTest extends TestCase
 {
-    // use DatabaseTransactions;
+    use DatabaseTransactions;
     protected $connectionsToTransact = [
         'mysql',
-        // 'middleware'
+        'middleware'
     ];
 
     protected function setUp(): void
