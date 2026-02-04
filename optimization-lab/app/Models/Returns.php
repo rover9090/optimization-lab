@@ -12,7 +12,7 @@ class Returns extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function lines() {
+    public function returnLine() {
         return $this->hasMany(ReturnLine::class, 'return_id');
     }
 }
