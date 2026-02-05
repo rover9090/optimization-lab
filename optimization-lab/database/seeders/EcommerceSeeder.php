@@ -25,7 +25,7 @@ class EcommerceSeeder extends Seeder
 
         // 3. Generate large-scale orders (starting with 100,000 records)
         $productIds = DB::table('product_data')->pluck('id')->toArray();
-        $locales = ['ca-en', 'ca-fr', 'au-en'];
+        $locales = ['ca-en','ca-fr','au-en','au-cn','be-nl','be-fr','fr','en','cz','pl','hu','nl'];
 
         $this->command->info('Generating 100,000 cross-border orders...');
         
