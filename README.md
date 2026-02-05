@@ -99,6 +99,32 @@ php artisan report:regional-sales ca
 php artisan report:regional-sales ca --optimized
 ```
 ---
+To ensure high-fidelity data, the testing suite implemented a **Symmetric Warm-up Protocol**:
+
+* **Connection Layer:** `Redis::ping()` to ensure active socket availability.
+* **Framework Layer:** `Order::selectRaw('1')->limit(1)->get()` to trigger **Eloquent Model Booting** and Metadata caching.
+* **Data Layer:** Pre-execution of both logic paths to stabilize the **MySQL Buffer Pool**.
+
+#### Performance Comparison (Steady State)
+| Metric | Original (SQL Join) | App-side Join | **App-side + Redis** |
+| --- | --- | --- | --- |
+| **Execution Time** | 0.573s | 0.573s | **0.170s (🚀 3.3x Faster)** |
+| **Data Source** | Hard Drive / Buffer | DB Query | **In-Memory (Redis)** |
+| **Framework Boot** | Cold Start | Warm Start | **Pre-warmed (Custom)** |
+*Tested with 100,000 orders and 2,000 config entries.
+
+### 🧠 The Performance Paradox & High-Fidelity Benchmarking
+
+During development, a critical "Performance Paradox" was observed: **The cached version was initially slower than the non-cached version.**
+
+Through deep instrumentation, I identified the root cause: **Framework-level Bootstrapping Cost.**
+
+* **The Finding**: In non-cache mode, the first SQL query indirectly "warmed up" the Laravel Eloquent model. In cache mode, the Redis hit bypassed this, forcing the main Order query to bear the **0.3s penalty** of Eloquent's internal bootstrapping.
+* **The Solution**: I implemented a **Symmetric Warm-up Protocol** in the Artisan command. By triggering a lightweight `Order::selectRaw('1')` before timing, I neutralized the framework's booting overhead, revealing the true **3.3x gain** provided by the Redis layer.
+
+> **Key Takeaway**: High-performance architecture isn't just about SQL tuning; it's about understanding the **lifecycle of the ORM** and its impact on cold-start latency.
+
+---
 
 ### 🧠 Engineering Q&A (Technical Deep Dive)
 
@@ -133,3 +159,10 @@ This section documents the engineering considerations and trade-offs made during
 
 * Traditional `AUTO_INCREMENT` leads to ID collisions when sharding data.
 * **Snowflake IDs** provide a 64-bit trend-increasing integer that includes a `Timestamp`, `Worker ID`, and `Sequence`. This guarantees uniqueness across nodes and maintains high indexing performance in MySQL's B+Tree structure.
+
+#### **Q5: Why did you choose JSON-encoded strings over PHP Serialization for Redis?**
+
+**A:** To minimize **CPU Overhead** and ensure **Framework Agnosticism**.
+
+* PHP's `serialize()` includes heavy Eloquent metadata, making the payload bulky and the "unserialization" process CPU-intensive.
+* By using `json_encode` of the raw array, I reduced the object hydration time in PHP. This allows the system to remain fast even when the configuration data grows, and makes the cache readable by other services (e.g., a Node.js microservice).
